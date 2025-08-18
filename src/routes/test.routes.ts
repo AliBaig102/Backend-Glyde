@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { TestController } from '@/controllers/test.controller';
+import { TestController } from '@/controllers/index';
 import { validate } from '@/middleware/validation';
 import {
   createTestSchema,

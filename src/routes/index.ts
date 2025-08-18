@@ -6,5 +6,6 @@
 // export { userRoutes } from './user.routes';
 // export { fileRoutes } from './file.routes';
 export { default as testRoutes } from './test.routes';
+export { default as authRoutes } from './auth.routes';
 
 export {};

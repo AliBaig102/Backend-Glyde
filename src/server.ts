@@ -30,6 +30,7 @@ import { requestId } from '@/middleware/requestId';
 // Import services
 import { WebSocketService } from '@/services/websocket.service';
 import { connectDatabase } from './config';
+import { authRoutes } from './routes';
 // import { connectDatabase } from './config';
 
 class Server {
@@ -129,6 +130,8 @@ class Server {
     // this.app.use(`/api/${apiVersion}/users`, userRoutes);
     // this.app.use(`/api/${apiVersion}/files`, fileRoutes);
     this.app.use(`/api/${apiVersion}/tests`, testRoutes);
+    this.app.use(`/api/${apiVersion}/auth`, authRoutes);
+
 
     // Root endpoint
     this.app.get('/', (_req, res) => {

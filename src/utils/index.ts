@@ -8,5 +8,5 @@
 // export { constants } from './constants';
 
 export { logger } from './logger';
-
+export { ResponseUtil } from './response';
 export {};
