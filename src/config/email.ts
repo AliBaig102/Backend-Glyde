@@ -150,11 +150,11 @@ class EmailManager {
   public async sendEmailVerification(
     to: string,
     userName: string,
-    verificationUrl: string
+    verificationCode: string
   ): Promise<boolean> {
     const template = this.getEmailVerificationTemplate(
       userName,
-      verificationUrl
+      verificationCode
     );
 
     const emailOptions: EmailOptions = {
@@ -384,7 +384,7 @@ class EmailManager {
 
   private getEmailVerificationTemplate(
     userName: string,
-    verificationUrl: string
+    verificationCode: string
   ): EmailTemplate {
     const appName = process.env['APP_NAME'] || 'Glyde';
     const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:3000';
@@ -405,16 +405,17 @@ class EmailManager {
         
         <p>Hello ${userName},</p>
         
-        <p>Please verify your email address by clicking the button below:</p>
+        <p>Please use the following verification code to verify your email address:</p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationUrl}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a>
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; display: inline-block;">
+            <span style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #28a745;">${verificationCode}</span>
+          </div>
         </div>
         
-        <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+        <p><strong>This verification code will expire in 10 minutes.</strong></p>
         
-        <p><strong>This verification link will expire in 24 hours.</strong></p>
+        <p>If you didn't request this verification, please ignore this email.</p>
         
         <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 14px;">
           <p>Best regards,<br>The ${appName} Team</p>
@@ -429,11 +430,13 @@ class EmailManager {
       
       Hello ${userName},
       
-      Please verify your email address by visiting the following link:
+      Please use the following verification code to verify your email address:
       
-      ${verificationUrl}
+      ${verificationCode}
       
-      This verification link will expire in 24 hours.
+      This verification code will expire in 10 minutes.
+      
+      If you didn't request this verification, please ignore this email.
       
       Best regards,
       The ${appName} Team

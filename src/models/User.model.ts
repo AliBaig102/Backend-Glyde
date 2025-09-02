@@ -37,6 +37,8 @@ export interface IUser extends Document {
   };
   status:
     | 'NEED_PHONE_VERIFICATION'
+    | 'NEED_EMAIL_VERIFICATION'
+    | 'NEED_PASSWORD_RESET'
     | 'TEMPORARY_BLOCKED'
     | 'BLOCKED'
     | 'ACTIVE';
@@ -206,6 +208,8 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: [
         'NEED_PHONE_VERIFICATION',
+        'NEED_EMAIL_VERIFICATION',
+        'NEED_PASSWORD_RESET',
         'TEMPORARY_BLOCKED',
         'BLOCKED',
         'ACTIVE',
@@ -213,6 +217,8 @@ const UserSchema = new Schema<IUser>(
       default: function (this: IUser) {
         return this.signupMethod === 'PHONE'
           ? 'NEED_PHONE_VERIFICATION'
+          : this.signupMethod === 'EMAIL'
+          ? 'NEED_EMAIL_VERIFICATION'
           : 'ACTIVE';
       },
     },
