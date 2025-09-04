@@ -7,7 +7,6 @@ import { logger } from '../utils/logger';
 
 export interface JWTPayload {
   userId: string;
-  email: string;
   role?: string;
   iat?: number;
   exp?: number;
@@ -177,7 +176,6 @@ class JWTManager {
       // Generate new access token with the same payload (excluding iat and exp)
       const newPayload: Omit<JWTPayload, 'iat' | 'exp'> = {
         userId: decoded.userId,
-        email: decoded.email,
       };
 
       if (decoded.role) {

@@ -1,63 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { Document, Model, Schema, Types, model } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { ILocation, IRating, IRideHistory, IUser } from '@/types/models';
 
-interface ILocation {
-  type: 'Point';
-  coordinates: [number, number]; // [longitude, latitude]
-}
-
-interface IRating {
-  driverId: Types.ObjectId;
-  rating: number;
-  comment?: string;
-  createdAt: Date;
-}
-interface IRideHistory {
-  rideId: Types.ObjectId;
-  driverId: Types.ObjectId;
-  pickupLocation: ILocation;
-  dropOffLocation: ILocation;
-  status: 'COMPLETED' | 'CANCELLED';
-  completedAt?: Date;
-}
-
-export interface IUser extends Document {
-  firstName: string;
-  lastName: string;
-  email?: string;
-  password?: string;
-  phone?: string;
-  googleId?: string;
-  signupMethod: 'EMAIL' | 'PHONE' | 'GOOGLE';
-  role: 'USER' | 'ADMIN' | 'DEVELOPER';
-  otp?: {
-    code: string;
-    expiresAt: Date;
-  };
-  status:
-    | 'NEED_PHONE_VERIFICATION'
-    | 'NEED_EMAIL_VERIFICATION'
-    | 'NEED_PASSWORD_RESET'
-    | 'TEMPORARY_BLOCKED'
-    | 'BLOCKED'
-    | 'ACTIVE';
-  blockedAt?: Date;
-  image?: string;
-  location: ILocation;
-  ratings?: IRating[];
-  averageRating?: number;
-  totalRides: number;
-  rideHistory?: IRideHistory[];
-  createdAt: Date;
-  updatedAt: Date;
-
-  // Instance methods
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  generateOTP(): { code: string; expiresAt: Date };
-  isOTPValid(code: string): boolean;
-}
-
+export interface UserDocument extends IUser, Document {}
 export interface IUserModel extends Model<IUser> {
   findByEmailOrPhone(identifier: string): Promise<IUser | null>;
 }
@@ -131,7 +77,7 @@ const RideHistorySchema = new Schema<IRideHistory>({
 });
 
 // User schema
-const UserSchema = new Schema<IUser>(
+const UserSchema = new Schema<UserDocument>(
   {
     firstName: {
       type: String,
@@ -350,5 +296,5 @@ UserSchema.pre('validate', function (next) {
   next();
 });
 
-export const User = model<IUser, IUserModel>('User', UserSchema);
+export const User = model<UserDocument, IUserModel>('User', UserSchema);
 export default User;
