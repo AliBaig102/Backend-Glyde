@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { logger, ResponseUtil } from '@/utils';
+import { ResponseUtil, logger } from '@/utils';
 import User from '@/models/User.model';
 import { emailManager, generateTokens } from '@/config';
 

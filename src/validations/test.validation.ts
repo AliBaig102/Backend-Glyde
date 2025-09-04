@@ -26,9 +26,7 @@ export const createTestSchema = z.object({
 // Schema for updating a test record (partial update)
 export const updateTestSchema = z.object({
   params: z.object({
-    id: z
-      .string({ message: 'Test ID must be a string' })
-      .regex(/^[0-9a-fA-F]{24}$/, 'Invalid MongoDB ObjectId format'),
+    id: commonSchemas.objectId,
   }),
   body: z
     .object({
@@ -44,9 +42,7 @@ export const updateTestSchema = z.object({
 // Schema for getting a single test record by ID
 export const getTestByIdSchema = z.object({
   params: z.object({
-    id: z
-      .string({ message: 'Test ID must be a string' })
-      .regex(/^[0-9a-fA-F]{24}$/, 'Invalid MongoDB ObjectId format'),
+    id: commonSchemas.objectId,
   }),
 });
 

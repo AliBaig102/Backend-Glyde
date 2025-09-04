@@ -109,7 +109,6 @@ export const validate = (schema: ZodSchema | ValidationOptions) => {
       // If there are validation errors, return error response
       if (errors.length > 0) {
         logger.warn('Validation failed', {
-          requestId: res.locals['requestId'],
           errors,
           path: req.path,
           method: req.method,
@@ -136,7 +135,7 @@ export const validate = (schema: ZodSchema | ValidationOptions) => {
 /**
  * Format Zod validation errors into our ValidationError format
  */
-const formatZodErrors = (
+export const formatZodErrors = (
   zodError: ZodError,
   prefix: string
 ): ValidationError[] => {
@@ -298,8 +297,8 @@ export const validateFileUpload = (
 ) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const errors: ValidationError[] = [];
-    const files = req.files as Express.Multer.File[] | undefined;
-    const file = req.file as Express.Multer.File | undefined;
+    const files = req.files as any[] | undefined;
+    const file = req.file as any | undefined;
 
     // Check if file is required but not provided
     if (required && !file && (!files || files.length === 0)) {

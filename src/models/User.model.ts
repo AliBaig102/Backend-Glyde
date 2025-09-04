@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { Document, Model, Schema, Types, model } from 'mongoose';
+import { Document, Model, Schema, model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { ILocation, IRating, IRideHistory, IUser } from '@/types/models';
 
@@ -164,8 +164,8 @@ const UserSchema = new Schema<UserDocument>(
         return this.signupMethod === 'PHONE'
           ? 'NEED_PHONE_VERIFICATION'
           : this.signupMethod === 'EMAIL'
-          ? 'NEED_EMAIL_VERIFICATION'
-          : 'ACTIVE';
+            ? 'NEED_EMAIL_VERIFICATION'
+            : 'ACTIVE';
       },
     },
     blockedAt: {

@@ -1,10 +1,13 @@
 /**
-
  * Glyde Backend API Server
  * Main entry point for the application
  */
 
+console.log('🚀 Starting Glyde Backend Server...');
+
 import './server';
+
+console.log('✅ Server import completed');
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason: unknown, promise: Promise<any>) => {

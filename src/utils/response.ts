@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 import {
   ErrorResponse,
   HttpStatusCode,
@@ -30,12 +29,10 @@ export class ResponseUtil {
       data,
       meta,
       timestamp: new Date().toISOString(),
-      requestId: res.locals['requestId'] || uuidv4(),
     };
 
     logger.info('API Success Response', {
       statusCode,
-      requestId: response.requestId,
       message,
       dataType: typeof data,
     });
@@ -60,12 +57,10 @@ export class ResponseUtil {
       errors: errors || [],
       meta,
       timestamp: new Date().toISOString(),
-      requestId: res.locals['requestId'] || uuidv4(),
     };
 
     logger.error('API Error Response', {
       statusCode,
-      requestId: response.requestId,
       message,
       errors: errors || [],
     });
@@ -162,7 +157,6 @@ export class ResponseUtil {
       logger.error('Internal Server Error', {
         message: error.message,
         stack: error.stack,
-        requestId: res.locals['requestId'],
       });
     }
 
@@ -174,12 +168,12 @@ export class ResponseUtil {
    */
   static paginated<T>(
     res: Response,
-    data: T[],
+    data: T,
     totalItems: number,
     currentPage: number,
     itemsPerPage: number,
     message: string = 'Data retrieved successfully'
-  ): Response<SuccessResponse<T[]>> {
+  ): Response<SuccessResponse<T>> {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const hasNextPage = currentPage < totalPages;
     const hasPrevPage = currentPage > 1;
@@ -194,12 +188,7 @@ export class ResponseUtil {
         hasPrevPage,
         nextPage: hasNextPage ? currentPage + 1 : null,
         prevPage: hasPrevPage ? currentPage - 1 : null,
-      },
-      total: totalItems,
-      page: currentPage,
-      limit: itemsPerPage,
-      hasNext: hasNextPage,
-      hasPrev: hasPrevPage,
+      }
     };
 
     return this.success(res, data, message, HttpStatusCode.OK, meta);

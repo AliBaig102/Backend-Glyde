@@ -15,7 +15,6 @@ export interface ApiResponse<T = any> {
     hasPrevPage: boolean;
     limit: number;
   };
-  requestId?: string;
 }
 
 /**
@@ -26,7 +25,6 @@ export interface ErrorResponse {
   success: false;
   message: string;
   error: string;
-  requestId?: string;
   details?: any;
 }
 
@@ -46,5 +44,4 @@ export interface SuccessResponse<T = any> {
     hasPrevPage: boolean;
     limit: number;
   };
-  requestId?: string;
 }

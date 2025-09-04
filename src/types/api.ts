@@ -9,7 +9,6 @@ export interface ApiResponse<T> {
   errors?: ValidationError[];
   meta?: ResponseMeta | undefined;
   timestamp: string;
-  requestId: string;
 }
 
 /**

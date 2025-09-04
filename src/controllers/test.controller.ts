@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
-import Test, { ITest } from '@/models/Test.model';
-import { logger } from '@/utils/logger';
+import Test from '@/models/Test.model';
 import { ResponseUtil } from '@/utils/response';
-import { getAllTestsSchema } from '@/validations/test.validation';
 
 /**
  * Test Controller
@@ -21,12 +18,10 @@ export class TestController {
       // Check if a test with the same firstName and lastName already exists
       const existingTest = await Test.findOne({ firstName, lastName });
       if (existingTest) {
-        res.status(409).json({
-          success: false,
-          message: 'A test record with this name already exists',
-          error: 'DUPLICATE_RECORD',
-          requestId: req.headers['x-request-id'] as string,
-        });
+        ResponseUtil.conflict(
+          res,
+          'A test record with this name already exists'
+        );
         return;
       }
 
@@ -34,30 +29,13 @@ export class TestController {
       const newTest = new Test({ firstName, lastName });
       const savedTest = await newTest.save();
 
-      logger.info(`Test record created successfully`, {
-        testId: savedTest._id,
-        firstName,
-        lastName,
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(201).json({
-        success: true,
-        message: 'Test record created successfully',
-        data: savedTest,
-        requestId: req.headers['x-request-id'] as string,
-      });
-    } catch (error) {
-      logger.error('Error creating test record', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      ResponseUtil.internalError(res, 'Failed to create test record');
-      return;
+      ResponseUtil.created(
+        res,
+        { test: savedTest },
+        'Test record created successfully'
+      );
+    } catch (error: any) {
+      ResponseUtil.internalError(res, 'Failed to create test record', error);
     }
   }
 
@@ -66,43 +44,12 @@ export class TestController {
    * @route GET /api/v1/tests
    */
   public static async getAllTests(req: Request, res: Response): Promise<void> {
-    const requestId = req.headers['x-request-id'] as string;
-
     try {
-      // Parse and validate query parameters
-      const queryData = {
-        page: parseInt(req.query['page'] as string) || 1,
-        limit: parseInt(req.query['limit'] as string) || 10,
-        search: (req.query['search'] as string) || undefined,
-        sortBy: (req.query['sortBy'] as string) || 'createdAt',
-        sortOrder: (req.query['sortOrder'] as string) || 'desc',
-      };
-
-      const queryValidation = getAllTestsSchema.safeParse({
-        query: queryData,
-      });
-      if (!queryValidation.success) {
-        logger.warn('Invalid query parameters for getAllTests', {
-          requestId,
-          errors: queryValidation.error.issues,
-        });
-
-        const validationErrors = queryValidation.error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message,
-          code: issue.code,
-        }));
-
-        ResponseUtil.badRequest(
-          res,
-          'Invalid query parameters',
-          validationErrors
-        );
-        return;
-      }
-
-      const { page, limit, search, sortBy, sortOrder } =
-        queryValidation.data.query;
+      const page = parseInt(req.query['page'] as string) || 1;
+      const limit = parseInt(req.query['limit'] as string) || 10;
+      const search = req.query['search'] as string;
+      const sortBy = (req.query['sortBy'] as string) || 'createdAt';
+      const sortOrder = (req.query['sortOrder'] as string) || 'desc';
 
       // Build search query
       const searchQuery: any = {};
@@ -122,46 +69,9 @@ export class TestController {
         Test.find(searchQuery).sort(sortOptions).skip(skip).limit(limit).lean(),
         Test.countDocuments(searchQuery),
       ]);
-
-      const totalPages = Math.ceil(totalCount / limit);
-      const hasNextPage = page < totalPages;
-      const hasPrevPage = page > 1;
-
-      logger.info(`Retrieved ${tests.length} test records`, {
-        page,
-        limit,
-        totalCount,
-        search,
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Test records retrieved successfully',
-        data: tests as ITest[],
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalCount,
-          hasNextPage,
-          hasPrevPage,
-          limit,
-        },
-        requestId: req.headers['x-request-id'] as string,
-      });
-    } catch (error) {
-      logger.error('Error retrieving test records', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Failed to retrieve test records',
-        error: 'INTERNAL_SERVER_ERROR',
-        requestId: req.headers['x-request-id'] as string,
-      });
+      ResponseUtil.paginated(res, { tests }, totalCount, page, limit);
+    } catch (error: any) {
+      ResponseUtil.internalError(res, 'Failed to retrieve test records', error);
     }
   }
 
@@ -173,53 +83,14 @@ export class TestController {
     try {
       const id = req.params['id'];
 
-      // Validate ObjectId format
-      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid test ID format',
-          error: 'INVALID_ID_FORMAT',
-          requestId: req.headers['x-request-id'] as string,
-        });
-        return;
-      }
-
       const test = await Test.findById(id);
       if (!test) {
-        res.status(404).json({
-          success: false,
-          message: 'Test record not found',
-          error: 'NOT_FOUND',
-          requestId: req.headers['x-request-id'] as string,
-        });
+        ResponseUtil.notFound(res, 'Test record not found');
         return;
       }
-
-      logger.info(`Test record retrieved successfully`, {
-        testId: id,
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Test record retrieved successfully',
-        data: test,
-        requestId: req.headers['x-request-id'] as string,
-      });
-    } catch (error) {
-      logger.error('Error retrieving test record', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        testId: req.params['id'],
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Failed to retrieve test record',
-        error: 'INTERNAL_SERVER_ERROR',
-        requestId: req.headers['x-request-id'] as string,
-      });
+      ResponseUtil.success(res, { test }, 'Test record retrieved successfully');
+    } catch (error: any) {
+      ResponseUtil.internalError(res, 'Failed to retrieve test record', error);
     }
   }
 
@@ -232,26 +103,10 @@ export class TestController {
       const id = req.params['id'];
       const updateData = req.body;
 
-      // Validate ObjectId format
-      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid test ID format',
-          error: 'INVALID_ID_FORMAT',
-          requestId: req.headers['x-request-id'] as string,
-        });
-        return;
-      }
-
       // Check if test exists
       const existingTest = await Test.findById(id);
       if (!existingTest) {
-        res.status(404).json({
-          success: false,
-          message: 'Test record not found',
-          error: 'NOT_FOUND',
-          requestId: req.headers['x-request-id'] as string,
-        });
+        ResponseUtil.notFound(res, 'Test record not found');
         return;
       }
 
@@ -267,12 +122,10 @@ export class TestController {
         });
 
         if (duplicateTest) {
-          res.status(409).json({
-            success: false,
-            message: 'A test record with this name already exists',
-            error: 'DUPLICATE_RECORD',
-            requestId: req.headers['x-request-id'] as string,
-          });
+          ResponseUtil.conflict(
+            res,
+            'A test record with this name already exists'
+          );
           return;
         }
       }
@@ -283,32 +136,13 @@ export class TestController {
         runValidators: true,
       });
 
-      logger.info(`Test record updated successfully`, {
-        testId: id,
-        updateData,
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Test record updated successfully',
-        data: updatedTest!,
-        requestId: req.headers['x-request-id'] as string,
-      });
-    } catch (error) {
-      logger.error('Error updating test record', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        testId: req.params['id'],
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Failed to update test record',
-        error: 'INTERNAL_SERVER_ERROR',
-        requestId: req.headers['x-request-id'] as string,
-      });
+      ResponseUtil.success(
+        res,
+        { test: updatedTest },
+        'Test record updated successfully'
+      );
+    } catch (error: any) {
+      ResponseUtil.internalError(res, 'Failed to update test record', error);
     }
   }
 
@@ -320,57 +154,14 @@ export class TestController {
     try {
       const id = req.params['id'];
 
-      // Validate ObjectId format
-      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid test ID format',
-          error: 'INVALID_ID_FORMAT',
-          requestId: req.headers['x-request-id'] as string,
-        });
-        return;
-      }
-
       const deletedTest = await Test.findByIdAndDelete(id);
       if (!deletedTest) {
-        res.status(404).json({
-          success: false,
-          message: 'Test record not found',
-          error: 'NOT_FOUND',
-          requestId: req.headers['x-request-id'] as string,
-        });
+        ResponseUtil.notFound(res, 'Test record not found');
         return;
       }
-
-      logger.info(`Test record deleted successfully`, {
-        testId: id,
-        deletedTest: {
-          firstName: deletedTest.firstName,
-          lastName: deletedTest.lastName,
-        },
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Test record deleted successfully',
-        data: null,
-        requestId: req.headers['x-request-id'] as string,
-      });
-    } catch (error) {
-      logger.error('Error deleting test record', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        testId: req.params['id'],
-        requestId: req.headers['x-request-id'] as string,
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Failed to delete test record',
-        error: 'INTERNAL_SERVER_ERROR',
-        requestId: req.headers['x-request-id'] as string,
-      });
+      ResponseUtil.success(res, null, 'Test record deleted successfully');
+    } catch (error: any) {
+      ResponseUtil.internalError(res, 'Failed to delete test record', error);
     }
   }
 }

@@ -11,6 +11,7 @@ import path from 'path';
 
 // Load environment variables
 dotenv.config();
+console.log('✅ Environment variables loaded');
 
 // Import configurations (will be created later)
 // import { connectDatabase } from '@/config/database';
@@ -20,18 +21,19 @@ dotenv.config();
 // import { authRoutes } from '@/routes/auth.routes';
 // import { userRoutes } from '@/routes/user.routes';
 // import { fileRoutes } from '@/routes/file.routes';
-import testRoutes from '@/routes/test.routes';
 
 // Import middleware (will be created later)
 // import { errorHandler } from '@/middleware/error.middleware';
 // import { notFound } from '@/middleware/notFound.middleware';
-import { requestId } from '@/middleware/requestId';
 
 // Import services
 import { WebSocketService } from '@/services/websocket.service';
-import { connectDatabase } from './config';
-import { authRoutes } from './routes';
+import { connectDatabase } from '@/config/database';
+import { authRoutes, testRoutes } from '@/routes';
 // import { connectDatabase } from './config';
+
+console.log('✅ All imports loaded successfully');
+console.log('✅ About to define Server class');
 
 class Server {
   private app: express.Application;
@@ -105,9 +107,6 @@ class Server {
       express.static(path.join(__dirname, '../uploads'))
     );
 
-    // Request ID middleware - must be early in the middleware stack
-    this.app.use(requestId);
-
     // Passport initialization (will be uncommented when passport config is ready)
     // this.app.use(passport.initialize());
   }
@@ -131,7 +130,6 @@ class Server {
     // this.app.use(`/api/${apiVersion}/files`, fileRoutes);
     this.app.use(`/api/${apiVersion}/tests`, testRoutes);
     this.app.use(`/api/${apiVersion}/auth`, authRoutes);
-
 
     // Root endpoint
     this.app.get('/', (_req, res) => {
