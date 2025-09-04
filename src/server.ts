@@ -8,10 +8,11 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
 import path from 'path';
+import { logger } from '@/utils/logger';
 
 // Load environment variables
 dotenv.config();
-console.log('✅ Environment variables loaded');
+logger.info('✅ Environment variables loaded');
 
 // Import configurations (will be created later)
 // import { connectDatabase } from '@/config/database';
@@ -32,8 +33,8 @@ import { connectDatabase } from '@/config/database';
 import { authRoutes, testRoutes } from '@/routes';
 // import { connectDatabase } from './config';
 
-console.log('✅ All imports loaded successfully');
-console.log('✅ About to define Server class');
+logger.info('✅ All imports loaded successfully');
+logger.info('✅ About to define Server class');
 
 class Server {
   private app: express.Application;
@@ -148,22 +149,22 @@ class Server {
 
     // Keep existing basic handlers for general room management
     this.io.on('connection', socket => {
-      console.log(`Client connected: ${socket.id}`);
+      logger.info(`Client connected: ${socket.id}`);
 
       // Handle disconnection
       socket.on('disconnect', reason => {
-        console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
+        logger.info(`Client disconnected: ${socket.id}, reason: ${reason}`);
       });
 
       // General room management handlers
       socket.on('join-room', (roomId: string) => {
         socket.join(roomId);
-        console.log(`Socket ${socket.id} joined room ${roomId}`);
+        logger.info(`Socket ${socket.id} joined room ${roomId}`);
       });
 
       socket.on('leave-room', (roomId: string) => {
         socket.leave(roomId);
-        console.log(`Socket ${socket.id} left room ${roomId}`);
+        logger.info(`Socket ${socket.id} left room ${roomId}`);
       });
     });
   }
@@ -185,7 +186,7 @@ class Server {
     });
 
     this.app.use((err: any, _req: express.Request, res: express.Response) => {
-      console.error('Error:', err);
+      logger.error('Error:', err);
       res.status(err.status || 500).json({
         status: 'error',
         message: err.message || 'Internal server error',
@@ -200,22 +201,22 @@ class Server {
     try {
       // Connect to database (will be uncommented when database config is ready)
       await connectDatabase();
-      console.log('✅ Database connected successfully');
+      logger.info('✅ Database connected successfully');
 
       // Setup passport strategies (will be uncommented when passport config is ready)
       // setupPassport();
-      console.log('✅ Passport strategies configured');
+      logger.info('✅ Passport strategies configured');
 
       // Start the server
       this.httpServer.listen(this.port, () => {
-        console.log(`🚀 Server is running on port ${this.port}`);
-        console.log(`📱 Environment: ${process.env['NODE_ENV']}`);
-        console.log(`🌐 API Version: ${process.env['API_VERSION'] || 'v1'}`);
-        console.log(`🔗 Health check: http://localhost:${this.port}/health`);
-        console.log(`📡 Socket.IO server is ready`);
+        logger.info(`🚀 Server is running on port ${this.port}`);
+    logger.info(`📱 Environment: ${process.env['NODE_ENV']}`);
+    logger.info(`🌐 API Version: ${process.env['API_VERSION'] || 'v1'}`);
+    logger.info(`🔗 Health check: http://localhost:${this.port}/health`);
+    logger.info(`📡 Socket.IO server is ready`);
       });
     } catch (error) {
-      console.error('❌ Failed to start server:', error);
+      logger.error('❌ Failed to start server:', error);
       process.exit(1);
     }
   }
