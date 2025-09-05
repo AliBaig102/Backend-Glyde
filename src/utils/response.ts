@@ -188,7 +188,7 @@ export class ResponseUtil {
         hasPrevPage,
         nextPage: hasNextPage ? currentPage + 1 : null,
         prevPage: hasPrevPage ? currentPage - 1 : null,
-      }
+      },
     };
 
     return this.success(res, data, message, HttpStatusCode.OK, meta);

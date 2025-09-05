@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Test from '@/models/Test.model';
 import { ResponseUtil } from '@/utils/response';
+import { DatabaseUtil } from '@/utils/database';
 
 /**
  * Test Controller
@@ -45,31 +46,15 @@ export class TestController {
    */
   public static async getAllTests(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query['page'] as string) || 1;
-      const limit = parseInt(req.query['limit'] as string) || 10;
-      const search = req.query['search'] as string;
-      const sortBy = (req.query['sortBy'] as string) || 'createdAt';
-      const sortOrder = (req.query['sortOrder'] as string) || 'desc';
-
-      // Build search query
-      const searchQuery: any = {};
-      if (search) {
-        searchQuery.$or = [
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } },
-        ];
-      }
-
-      // Calculate pagination
-      const skip = (page - 1) * limit;
-      const sortOptions: any = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
-
-      // Execute queries in parallel
-      const [tests, totalCount] = await Promise.all([
-        Test.find(searchQuery).sort(sortOptions).skip(skip).limit(limit).lean(),
-        Test.countDocuments(searchQuery),
-      ]);
-      ResponseUtil.paginated(res, { tests }, totalCount, page, limit);
+      const { page, limit, search, sortBy, sortOrder } = req.query;
+      await DatabaseUtil.Paginated(req, res, Test, {
+        page: Number(page),
+        limit: Number(limit),
+        search: search as string,
+        sortBy: sortBy as string,
+        sortOrder: sortOrder as 'asc' | 'desc',
+        searchFields: ['firstName', 'lastName'],
+      });
     } catch (error: any) {
       ResponseUtil.internalError(res, 'Failed to retrieve test records', error);
     }

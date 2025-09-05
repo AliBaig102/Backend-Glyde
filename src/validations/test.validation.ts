@@ -55,24 +55,8 @@ export const deleteTestSchema = z.object({
 // Schema for getting all tests with optional query parameters
 export const getAllTestsSchema = z.object({
   query: z.object({
-    page: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform(val => {
-        if (val === undefined) return 1;
-        return typeof val === 'string' ? parseInt(val, 10) : val;
-      })
-      .refine(val => val > 0, 'Page must be a positive number'),
-
-    limit: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform(val => {
-        if (val === undefined) return 10;
-        return typeof val === 'string' ? parseInt(val, 10) : val;
-      })
-      .refine(val => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
-
+    page: z.union([z.string(), z.number()]).optional(),
+    limit: z.union([z.string(), z.number()]).optional(),
     search: z
       .string()
       .optional()
